@@ -15,10 +15,11 @@
 #ifndef OC_AUDIO_PROTOCOL_H
 #define OC_AUDIO_PROTOCOL_H
 
+#include <Protocol/AudioIo.h>
 #include <Protocol/AppleVoiceOver.h>
 #include <Protocol/DevicePath.h>
 
-#define OC_AUDIO_PROTOCOL_REVISION  0x010000
+#define OC_AUDIO_PROTOCOL_REVISION  0x020000
 
 //
 // OC_AUDIO_PROTOCOL_GUID
@@ -96,14 +97,18 @@ typedef enum {
   OcVoiceOverAudioFilePasswordRetryLimit    = 0x1042,
   OcVoiceOverAudioFileReloading             = 0x1043,
   OcVoiceOverAudioFileResetNVRAM            = 0x1044,
-  OcVoiceOverAudioFileSelected              = 0x1045,
-  OcVoiceOverAudioFileShowAuxiliary         = 0x1046,
-  OcVoiceOverAudioFileTimeout               = 0x1047,
-  OcVoiceOverAudioFileUEFI_Shell            = 0x1048,
-  OcVoiceOverAudioFileWelcome               = 0x1049,
-  OcVoiceOverAudioFileWindows               = 0x104A,
+  OcVoiceOverAudioFileRestart               = 0x1045,
+  OcVoiceOverAudioFileSelected              = 0x1046,
+  OcVoiceOverAudioFileShowAuxiliary         = 0x1047,
+  OcVoiceOverAudioFileShutDown              = 0x1048,
+  OcVoiceOverAudioFileSIPIsDisabled         = 0x1049,
+  OcVoiceOverAudioFileSIPIsEnabled          = 0x104A,
+  OcVoiceOverAudioFileTimeout               = 0x104B,
+  OcVoiceOverAudioFileUEFI_Shell            = 0x104C,
+  OcVoiceOverAudioFileWelcome               = 0x104D,
+  OcVoiceOverAudioFileWindows               = 0x104E,
 
-  OcVoiceOverAudioFileMax                   = 0x104B,
+  OcVoiceOverAudioFileMax                   = 0x104F,
 } OC_VOICE_OVER_AUDIO_FILE;
 
 STATIC_ASSERT (OcVoiceOverAudioFileIndexMax - OcVoiceOverAudioFileIndexBase == 9 + 26, "Invalid index count");
@@ -139,6 +144,9 @@ EFI_STATUS
   @paran[in]      LanguageCode Language code for the file.
   @param[out]     Buffer       Pointer to buffer.
   @param[out]     BufferSize   Pointer to buffer size.
+  @param[out]     Frequency    Decoded PCM frequency.
+  @param[out]     Bits         Decoded bit count.
+  @param[out]     Channels     Decoded amount of channels.
 
   @retval EFI_SUCCESS on successful file lookup.
 **/
@@ -149,7 +157,10 @@ EFI_STATUS
   IN  UINT32                          File,
   IN  APPLE_VOICE_OVER_LANGUAGE_CODE  LanguageCode,
   OUT UINT8                           **Buffer,
-  OUT UINT32                          *BufferSize
+  OUT UINT32                          *BufferSize,
+  OUT EFI_AUDIO_IO_PROTOCOL_FREQ      *Frequency,
+  OUT EFI_AUDIO_IO_PROTOCOL_BITS      *Bits,
+  OUT UINT8                           *Channels
   );
 
 /**
@@ -218,6 +229,21 @@ EFI_STATUS
   IN     BOOLEAN                    Wait
   );
 
+/**
+  Set playback delay.
+
+  @param[in,out] This         Audio protocol instance.
+  @param[in]     Delay        Delay after audio configuration in microseconds.
+
+  @return previous delay, defaults to 0.
+**/
+typedef
+UINTN
+(EFIAPI* OC_AUDIO_SET_DELAY) (
+  IN OUT OC_AUDIO_PROTOCOL          *This,
+  IN     UINTN                      Delay
+  );
+
 //
 // Includes a revision for debugging reasons.
 //
@@ -227,6 +253,7 @@ struct OC_AUDIO_PROTOCOL_ {
   OC_AUDIO_SET_PROVIDER   SetProvider;
   OC_AUDIO_PLAY_FILE      PlayFile;
   OC_AUDIO_STOP_PLAYBACK  StopPlayback;
+  OC_AUDIO_SET_DELAY      SetDelay;
 };
 
 extern EFI_GUID gOcAudioProtocolGuid;

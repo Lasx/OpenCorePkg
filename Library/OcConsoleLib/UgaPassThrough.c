@@ -18,6 +18,8 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
+#include <Library/OcMiscLib.h>
+
 STATIC
 EFI_STATUS
 EFIAPI
@@ -59,8 +61,8 @@ OcUgaDrawGetMode (
 
   *HorizontalResolution = Info->HorizontalResolution;
   *VerticalResolution = Info->VerticalResolution;
-  *ColorDepth = 24;
-  *RefreshRate = 60;
+  *ColorDepth  = DEFAULT_COLOUR_DEPTH;
+  *RefreshRate = DEFAULT_REFRESH_RATE;
 
   return EFI_SUCCESS;
 }
@@ -78,8 +80,6 @@ OcUgaDrawSetMode (
 {
   EFI_STATUS        Status;
   OC_UGA_PROTOCOL   *OcUgaDraw;
-
-  OcUgaDraw = BASE_CR (This, OC_UGA_PROTOCOL, Uga);
 
   DEBUG ((
     DEBUG_INFO,
@@ -149,7 +149,7 @@ OcUgaDrawBlt (
     );
 }
 
-VOID
+EFI_STATUS
 OcProvideUgaPassThrough (
   VOID
   )
@@ -163,27 +163,16 @@ OcProvideUgaPassThrough (
   OC_UGA_PROTOCOL                *OcUgaDraw;
 
   //
-  // For now we do not use this, but as a side note:
+  // For now we do not need this but for launching 10.4, but as a side note:
   // MacPro5,1 has 2 GOP protocols:
   // - for GPU
   // - for ConsoleOutput
   // and 1 UGA protocol:
   // - for unknown handle
   //
-  Status = gBS->LocateHandleBuffer (
-    ByProtocol,
-    &gEfiUgaDrawProtocolGuid,
-    NULL,
-    &HandleCount,
-    &HandleBuffer
-    );
-
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_INFO, "OCC: Found %u handles with UGA draw\n", (UINT32) HandleCount));
-    FreePool (HandleBuffer);
-  } else {
-    DEBUG ((DEBUG_INFO, "OCC: Found NO handles with UGA draw\n"));
-  }
+  DEBUG_CODE_BEGIN ();
+  DEBUG ((DEBUG_INFO, "OCC: Found %u handles with UGA draw\n", (UINT32) OcCountProtocolInstances (&gEfiUgaDrawProtocolGuid)));
+  DEBUG_CODE_END ();
 
   Status = gBS->LocateHandleBuffer (
     ByProtocol,
@@ -192,60 +181,66 @@ OcProvideUgaPassThrough (
     &HandleCount,
     &HandleBuffer
     );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "OCC: Failed to find handles with GOP - %r\n", Status));
+    return Status;
+  }
 
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_INFO, "OCC: Found %u handles with GOP for UGA check\n", (UINT32) HandleCount));
+  DEBUG ((DEBUG_INFO, "OCC: Found %u handles with GOP for UGA check\n", (UINT32) HandleCount));
+  for (Index = 0; Index < HandleCount; ++Index) {
+    DEBUG ((DEBUG_INFO, "OCC: Trying handle %u - %p\n", (UINT32) Index, HandleBuffer[Index]));
 
-    for (Index = 0; Index < HandleCount; ++Index) {
-      DEBUG ((DEBUG_INFO, "OCC: Trying handle %u - %p\n", (UINT32) Index, HandleBuffer[Index]));
-
-      Status = gBS->HandleProtocol (
-        HandleBuffer[Index],
-        &gEfiGraphicsOutputProtocolGuid,
-        (VOID **) &GraphicsOutput
-        );
-
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_INFO, "OCC: No GOP protocol - %r\n", Status));
-        continue;
-      }
-
-      Status = gBS->HandleProtocol (
-        HandleBuffer[Index],
-        &gEfiUgaDrawProtocolGuid,
-        (VOID **) &UgaDraw
-        );
-
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_INFO, "OCC: No UGA protocol - %r\n", Status));
-
-        OcUgaDraw = AllocateZeroPool (sizeof (*OcUgaDraw));
-        if (OcUgaDraw == NULL) {
-          DEBUG ((DEBUG_INFO, "OCC: Failed to allocate UGA protocol\n"));
-          continue;
-        }
-
-        OcUgaDraw->GraphicsOutput = GraphicsOutput;
-        OcUgaDraw->Uga.GetMode = OcUgaDrawGetMode;
-        OcUgaDraw->Uga.SetMode = OcUgaDrawSetMode;
-        OcUgaDraw->Uga.Blt = OcUgaDrawBlt;
-
-        Status = gBS->InstallMultipleProtocolInterfaces (
-          &HandleBuffer[Index],
-          &gEfiUgaDrawProtocolGuid,
-          &OcUgaDraw->Uga,
-          NULL
-          );
-
-        DEBUG ((DEBUG_INFO, "OCC: Installed UGA protocol - %r\n", Status));
-      } else {
-        DEBUG ((DEBUG_INFO, "OCC: Has UGA protocol, skip\n"));
-        continue;
-      }
+    Status = gBS->HandleProtocol (
+      HandleBuffer[Index],
+      &gEfiGraphicsOutputProtocolGuid,
+      (VOID **) &GraphicsOutput
+      );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "OCC: No GOP protocol - %r\n", Status));
+      continue;
     }
 
-    FreePool (HandleBuffer);
-  } else {
-    DEBUG ((DEBUG_INFO, "OCC: Failed to find handles with GOP\n"));
+    Status = gBS->HandleProtocol (
+      HandleBuffer[Index],
+      &gEfiUgaDrawProtocolGuid,
+      (VOID **) &UgaDraw
+      );
+    if (!EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "OCC: Skipping UGA proxying as it is already present on handle %u - %p\n", (UINT32) Index, HandleBuffer[Index]));
+      continue;
+    }
+
+    OcUgaDraw = AllocateZeroPool (sizeof (*OcUgaDraw));
+    if (OcUgaDraw == NULL) {
+      DEBUG ((DEBUG_INFO, "OCC: Failed to allocate UGA protocol\n"));
+      continue;
+    }
+
+    OcUgaDraw->GraphicsOutput = GraphicsOutput;
+    OcUgaDraw->Uga.GetMode = OcUgaDrawGetMode;
+    OcUgaDraw->Uga.SetMode = OcUgaDrawSetMode;
+    OcUgaDraw->Uga.Blt = OcUgaDrawBlt;
+
+    Status = gBS->InstallMultipleProtocolInterfaces (
+      &HandleBuffer[Index],
+      &gEfiUgaDrawProtocolGuid,
+      &OcUgaDraw->Uga,
+      NULL
+      );
+    if (EFI_ERROR (Status)) {
+      FreePool (OcUgaDraw);
+    }
+
+    DEBUG ((
+      DEBUG_INFO,
+      "OCC: Installed UGA protocol - %r (Handle %u - %p)\n",
+      Status,
+      (UINT32) Index,
+      HandleBuffer[Index]
+      ));
   }
+
+  FreePool (HandleBuffer);
+
+  return Status;
 }

@@ -54,15 +54,47 @@ IsAsciiPrint (
   IN CHAR8  Char
   );
 
-/** Check if character is a white space character
+/** Check if character is alphabetical.
+
+  @param[in] Char  The ascii character to check if is alphabetical.
+
+  @retval  TRUE, if character is alphabetical.
+**/
+INTN
+IsAsciiAlpha (
+  IN CHAR8  Char
+  );
+
+/** Check if character is a white space character.
 
   @param[in] Char  The ascii character to check if is white space.
 
-  @retval  TRUE, if character is a white space character
+  @retval  TRUE, if character is a white space character.
 **/
 INTN
 IsAsciiSpace (
   IN CHAR8  Char
+  );
+
+/** Check if character is a number.
+
+  @param[in] Char  The ascii character to check if is number.
+
+  @retval  TRUE, if character is a number.
+**/
+BOOLEAN
+IsAsciiNumber (
+  IN CHAR8  Char
+  );
+
+/**
+  Convert path with mixed slashes to UEFI slashes (\\).
+
+  @param[in,out]  String      Path.
+**/
+VOID
+AsciiUefiSlashes (
+  IN OUT CHAR8    *String
   );
 
 /** Convert null terminated ascii string to unicode.
@@ -84,6 +116,8 @@ AsciiStrCopyToUnicode (
   @param[out]  Buffer      Destination buffer.
   @param[in]   BufferSize  Destination buffer size in bytes.
   @param[in]   Value       Value to convert.
+
+  @retval TRUE on fit
 **/
 BOOLEAN
 AsciiUint64ToLowerHex (
@@ -112,6 +146,83 @@ OcAsciiSafeSPrint (
   IN  UINTN         BufferSize,
   IN  CONST CHAR8   *FormatString,
   ...
+  );
+
+/**
+  Compares up to a specified length the contents of two Null-terminated ASCII
+  strings using case insensitive comparisons, and returns the difference
+  between the first mismatched ASCII characters.
+
+  This function compares the Null-terminated ASCII string FirstString to the
+  Null-terminated ASCII string SecondString using case insensitive
+  comparisons.  At most, Length ASCII characters will be compared. If Length
+  is 0, then 0 is returned. If FirstString is identical to SecondString, then 0
+  is returned. Otherwise, the value returned is the first mismatched upper case
+  ASCII character in SecondString subtracted from the first mismatched upper
+  case ASCII character in FirstString.
+
+  If Length > 0 and FirstString is NULL, then ASSERT().
+  If Length > 0 and SecondString is NULL, then ASSERT().
+  TODO
+  If PcdMaximumAsciiStringLength is not zero, and Length is greater than
+  PcdMaximumAsciiStringLength, then ASSERT().
+  If PcdMaximumAsciiStringLength is not zero, and FirstString contains more
+  than PcdMaximumAsciiStringLength ASCII characters, not including the
+  Null-terminator, then ASSERT().
+  If PcdMaximumAsciiStringLength is not zero, and SecondString contains more
+  than PcdMaximumAsciiStringLength ASCII characters, not including the
+  Null-terminator, then ASSERT().
+
+  @param  FirstString   A pointer to a Null-terminated ASCII string.
+  @param  SecondString  A pointer to a Null-terminated ASCII string.
+  @param  Length        The maximum number of ASCII characters to compare.
+
+  @retval ==0    FirstString is identical to SecondString using case
+                 insensitive comparisons.
+  @retval others FirstString is not identical to SecondString using case
+                 insensitive comparisons.
+
+**/
+INTN
+EFIAPI
+OcAsciiStrniCmp (
+  IN CONST CHAR8   *FirstString,
+  IN CONST CHAR8   *SecondString,
+  IN UINTN         Length
+  );
+
+/** Check if ASCII string ends with another ASCII string.
+
+  @param[in]  String                A pointer to a Null-terminated ASCII string.
+  @param[in]  SearchString          A pointer to a Null-terminated ASCII string
+                                    to compare against String.
+  @param[in]  CaseInsensitiveMatch  Perform case-insensitive comparison.
+
+  @retval  TRUE if String ends with SearchString.
+**/
+BOOLEAN
+EFIAPI
+OcAsciiEndsWith (
+  IN CONST CHAR8      *String,
+  IN CONST CHAR8      *SearchString,
+  IN BOOLEAN          CaseInsensitiveMatch
+  );
+
+/** Check if ASCII string starts with another ASCII string.
+
+  @param[in]  String                A pointer to a Null-terminated ASCII string.
+  @param[in]  SearchString          A pointer to a Null-terminated ASCII string
+                                    to compare against String.
+  @param[in]  CaseInsensitiveMatch  Perform case-insensitive comparison.
+
+  @retval  TRUE if String starts with SearchString.
+**/
+BOOLEAN
+EFIAPI
+OcAsciiStartsWith (
+  IN CONST CHAR8      *String,
+  IN CONST CHAR8      *SearchString,
+  IN BOOLEAN          CaseInsensitiveMatch
   );
 
 /**
@@ -146,8 +257,8 @@ OcAsciiSafeSPrint (
 INTN
 EFIAPI
 OcStriCmp (
-  IN CHAR16  *FirstString,
-  IN CHAR16  *SecondString
+  IN CONST CHAR16  *FirstString,
+  IN CONST CHAR16  *SecondString
   );
 
 /**
@@ -194,6 +305,115 @@ OcStrniCmp (
   IN CONST CHAR16  *FirstString,
   IN CONST CHAR16  *SecondString,
   IN UINTN         Length
+  );
+
+/**
+  Returns the first occurrence of a Null-terminated ASCII sub-string
+  in a Null-terminated ASCII string through a case insensitive comparison.
+
+  This function scans the contents of the Null-terminated ASCII string
+  specified by String and returns the first occurrence of SearchString.
+  If SearchString is not found in String, then NULL is returned.  If
+  the length of SearchString is zero, then String is returned.
+
+  If String is NULL, then ASSERT().
+  If SearchString is NULL, then ASSERT().
+
+  If PcdMaximumAsciiStringLength is not zero, and SearchString
+  or String contains more than PcdMaximumAsciiStringLength ASCII
+  characters, not including the Null-terminator, then ASSERT().
+
+  @param  String          The pointer to a Null-terminated ASCII string.
+  @param  SearchString    The pointer to a Null-terminated ASCII string to search for.
+
+  @retval NULL            If the SearchString does not appear in String.
+  @return others          If there is a match.
+
+**/
+CHAR8 *
+EFIAPI
+OcAsciiStriStr (
+  IN      CONST CHAR8              *String,
+  IN      CONST CHAR8              *SearchString
+  );
+
+/**
+  Returns a pointer to the first occurrence of Char
+  in a Null-terminated ASCII string.
+
+  If String is NULL, then ASSERT().
+
+  If PcdMaximumAsciiStringLength is not zero, and String
+  contains more than PcdMaximumAsciiStringLength ASCII
+  characters, not including the Null-terminator, then ASSERT().
+
+  @param  String          The pointer to a Null-terminated ASCII string.
+  @param  Char            Character to be located.
+
+  @return                 A pointer to the first occurrence of Char in String.
+  @retval NULL            If Char cannot be found in String.
+**/
+CHAR8 *
+EFIAPI
+OcAsciiStrChr (
+  IN      CONST CHAR8              *String,
+  IN            CHAR8              Char
+  );
+
+/**
+  Returns a pointer to the last occurrence of Char
+  in a Null-terminated ASCII string.
+
+  If String is NULL, then ASSERT().
+
+  If PcdMaximumAsciiStringLength is not zero, and String
+  contains more than PcdMaximumAsciiStringLength ASCII
+  characters, not including the Null-terminator, then ASSERT().
+
+  @param  String          The pointer to a Null-terminated ASCII string.
+  @param  Char            Character to be located.
+
+  @return                 A pointer to the last occurrence of Char in String.
+  @retval NULL            If Char cannot be found in String.
+**/
+CHAR8 *
+EFIAPI
+OcAsciiStrrChr (
+  IN      CONST CHAR8              *String,
+  IN            CHAR8              Char
+  );
+
+/**
+  Check if a string up to N bytes is ASCII-printable.
+
+  @param[in]  String      String to be checked.
+  @param[in]  Number      Number of bytes to scan.
+
+  @retval     TRUE        If String within Number bytes is all ASCII-printable.
+**/
+BOOLEAN
+OcAsciiStringNPrintable (
+  IN  CONST CHAR8  *String,
+  IN  UINTN        Number
+  );
+
+/**
+  Convert a Null-terminated ASCII GUID string to a value of type
+  EFI_GUID with RFC 4122 (raw) encoding.
+
+  @param  String                   Pointer to a Null-terminated ASCII string.
+  @param  Guid                     Pointer to the converted GUID.
+
+  @retval EFI_SUCCESS           Guid is translated from String.
+  @retval EFI_INVALID_PARAMETER If String is NULL.
+                                If Data is NULL.
+  @retval EFI_UNSUPPORTED       If String is not as the above format.
+**/
+EFI_STATUS
+EFIAPI
+OcAsciiStrToRawGuid (
+  IN  CONST CHAR8        *String,
+  OUT GUID               *Guid
   );
 
 /**
@@ -269,6 +489,40 @@ OcUnicodeSafeSPrint (
   ...
   );
 
+/** Check if Unicode string ends with another Unicode string.
+
+  @param[in]  String                A pointer to a Null-terminated Unicode string.
+  @param[in]  SearchString          A pointer to a Null-terminated Unicode string
+                                    to compare against String.
+  @param[in]  CaseInsensitiveMatch  Perform case-insensitive comparison.
+
+  @retval  TRUE if String ends with SearchString.
+**/
+BOOLEAN
+EFIAPI
+OcUnicodeEndsWith (
+  IN CONST CHAR16     *String,
+  IN CONST CHAR16     *SearchString,
+  IN BOOLEAN          CaseInsensitiveMatch
+  );
+
+/** Check if Unicode string starts with another Unicode string.
+
+  @param[in]  String                A pointer to a Null-terminated Unicode string.
+  @param[in]  SearchString          A pointer to a Null-terminated Unicode string
+                                    to compare against String.
+  @param[in]  CaseInsensitiveMatch  Perform case-insensitive comparison.
+
+  @retval  TRUE if String starts with SearchString.
+**/
+BOOLEAN
+EFIAPI
+OcUnicodeStartsWith (
+  IN CONST CHAR16     *String,
+  IN CONST CHAR16     *SearchString,
+  IN BOOLEAN          CaseInsensitiveMatch
+  );
+
 /**
   Convert path with mixed slashes to UEFI slashes (\\).
 
@@ -276,6 +530,25 @@ OcUnicodeSafeSPrint (
 **/
 VOID
 UnicodeUefiSlashes (
+  IN OUT CHAR16  *String
+  );
+
+/**
+  Drop last path from string and normalise start path. Examples:
+  - "Path" -> ""
+  - "Path/" -> ""
+  - "Path1\\Path2\\" -> "Path1"
+  - "\\Path1\\Path2" -> "Path1"
+  - "\\/" -> "/" & FALSE
+  - "\\" -> "" & FALSE
+  - "" -> "" & FALSE
+
+  @param[in,out]  String      Path.
+
+  @retval TRUE on success
+**/
+BOOLEAN
+UnicodeGetParentDirectory (
   IN OUT CHAR16  *String
   );
 
@@ -289,6 +562,68 @@ VOID
 UnicodeFilterString (
   IN OUT CHAR16   *String,
   IN     BOOLEAN  SingleLine
+  );
+
+/**
+  Filter string from unprintable characters.
+
+  @param[in,out]  String      String to filter.
+  @param[in]      SingleLine  Enforce only one line.
+**/
+VOID
+AsciiFilterString (
+  IN OUT CHAR8    *String,
+  IN     BOOLEAN  SingleLine
+  );
+
+/**
+  Check if string is filtered.
+
+  @param[in]      String      String to be checked.
+  @param[in]      SingleLine  Enforce only one line.
+
+  @retval TRUE if string is filtered.
+**/
+BOOLEAN
+UnicodeIsFilteredString (
+  IN CONST CHAR16   *String,
+  IN       BOOLEAN  SingleLine
+  );
+
+/**
+  Check if string starts with GUID.
+
+  @param[in]  String  String to check.
+
+  @retval TRUE when string starts with GUID.
+  @retval FALSE otherwise.
+**/
+BOOLEAN
+HasValidGuidStringPrefix (
+  IN CONST CHAR16  *String
+  );
+
+/**
+  Compares two Null-terminated Unocide and ASCII strings, and returns the
+  difference between the first mismatched characters.
+
+  This function compares the Null-terminated Unicode string FirstString to the
+  Null-terminated ASCII string SecondString. If FirstString is identical to
+  SecondString, then 0 is returned. Otherwise, the value returned is the first
+  mismatched character in SecondString subtracted from the first mismatched
+  character in FirstString.
+
+  @param  FirstString   A pointer to a Null-terminated Unicode string.
+  @param  SecondString  A pointer to a Null-terminated ASCII string.
+
+  @retval ==0      FirstString is identical to SecondString.
+  @retval !=0      FirstString is not identical to SecondString.
+
+**/
+INTN
+MixedStrCmp (
+  IN CONST CHAR16  *FirstString,
+  IN CONST CHAR8   *SecondString
   );
 
 #endif // OC_STRING_LIB_H

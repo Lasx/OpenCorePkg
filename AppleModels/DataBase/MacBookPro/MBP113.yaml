@@ -1,7 +1,7 @@
 BIOSVendor: "Apple Inc."
-BIOSVersion: "160.0.0.0.0"
-BIOSLegacyVersion: "MBP112.88Z.F000.B00.2004121759"
-BIOSReleaseDate: "04/12/2020"
+BIOSVersion: "431.0.0.0.0"
+BIOSLegacyVersion: "MBP112.88Z.F000.B00.2102221750"
+BIOSReleaseDate: "02/22/2021"
 SystemManufacturer: "Apple Inc."
 SystemProductName: "MacBookPro11,3"
 SystemVersion: "1.0"
@@ -24,14 +24,10 @@ ChassisType: 0xA
 ChassisVersion: "Mac-2BD1B31983FE1663"
 ChassisAssetTag: ""
 PlatformFeature: 0x2
-# FIXME: check
-FirmwareFeatures: 0xE80FE137
-# FIXME: check
-FirmwareFeaturesMask: 0xFF1FFF3F
-# FIXME: check
-ExtendedFirmwareFeatures: 0x00000000E80FE137
-# FIXME: check
-ExtendedFirmwareFeaturesMask: 0x00000000FF1FFF3F
+FirmwareFeatures: 0xEB0FF577
+FirmwareFeaturesMask: 0xFF1FFF7F
+ExtendedFirmwareFeatures: 0x00000000EB0FF577
+ExtendedFirmwareFeaturesMask: 0x00000000FF1FFF7F
 MemoryFormFactor: 0xD
 # FIXME: check values (most should be correct?) and add missing, if any
 ProcessorType:
@@ -77,13 +73,13 @@ SmcEPCI: 0xF0D007
 OEMStrings: |-
   Apple ROM Version
     Model:        MBP112
-    EFI Version:  160.0.0.0.0
-    Built by:     root@saumon
-    Date:         Sun Apr 12 17:59:15 PDT 2020
-    Revision:     160 (B&I)
+    EFI Version:  431.0.0.0.0
+    Built by:     root@bb-g8-pdb109
+    Date:         Mon Feb 22 17:50:03 PST 2021
+    Revision:     431 (B&I)
     ROM Version:  F000_B00
     Build Type:   Official Build, Release
-    Compiler:     Apple clang version 3.0 (tags/Apple/clang-211.10.1) (based on LLVM 3.0svn)
+    Compiler:     clang-1205.0.19.59.6
 Specifications:
   CPUCodename:
     - "Crystal Well"

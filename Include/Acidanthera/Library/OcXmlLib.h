@@ -137,9 +137,10 @@ XmlDocumentParse (
 //
 // Exports parsed document into the buffer.
 //
-// @param Document XML_DOCUMENT to export
-// @param Length   Resulting length of the buffer without trailing \0 (optional)
-// @param Skip     N root levels before exporting, normally 0.
+// @param Document          XML_DOCUMENT to export
+// @param Length            Resulting length of the buffer without trailing \0 (optional)
+// @param Skip              N root levels before exporting, normally 0.
+// @param PrependPlistInfo  Prepend XML plist doc info to exported document.
 //
 // @return Exported buffer allocated from pool or NULL.
 //
@@ -147,7 +148,8 @@ CHAR8 *
 XmlDocumentExport (
   XML_DOCUMENT  *Document,
   UINT32        *Length,
-  UINT32        Skip
+  UINT32        Skip,
+  BOOLEAN       PrependPlistInfo
   );
 
 //
@@ -183,6 +185,19 @@ XmlNodeName (
 CONST CHAR8 *
 XmlNodeContent (
   XML_NODE  *Node
+  );
+
+//
+// Changes the XML_NODE's string content to the passed content.
+//
+// @param Content New node content.
+//
+// @warning Content must stay valid till XmlDocumentFree.
+//
+VOID
+XmlNodeChangeContent (
+  XML_NODE     *Node,
+  CONST CHAR8  *Content
   );
 
 //
@@ -343,7 +358,7 @@ PlistIntegerValue (
 
 //
 // Decodes data content for valid type or sets *Size to 0.
-// Valid type for MetaData is DATA itself, STRING, INTEGER,
+// Valid type for MultiData is DATA itself, STRING, INTEGER,
 // or BOOLEAN (as 1 byte with 1 or 0 value).
 //
 // @param Buffer output buffer.
@@ -352,7 +367,7 @@ PlistIntegerValue (
 // @warn Buffer must be at least 1 byte long.
 //
 BOOLEAN
-PlistMetaDataValue (
+PlistMultiDataValue (
   XML_NODE  *Node,
   VOID      *Buffer,
   UINT32    *Size
@@ -380,7 +395,7 @@ PlistDataSize (
 // Estimates meta data content size.
 //
 BOOLEAN
-PlistMetaDataSize (
+PlistMultiDataSize (
   XML_NODE  *Node,
   UINT32    *Size
   );

@@ -1,7 +1,7 @@
 BIOSVendor: "Apple Inc."
-BIOSVersion: "207.0.0.0.0"
-BIOSLegacyVersion: "MBP143.88Z.F000.B00.2004240928"
-BIOSReleaseDate: "04/24/2020"
+BIOSVersion: "429.100.7.0.0"
+BIOSLegacyVersion: "MBP143.88Z.F000.B00.2102262340"
+BIOSReleaseDate: "02/26/2021"
 SystemManufacturer: "Apple Inc."
 SystemProductName: "MacBookPro14,3"
 SystemVersion: "1.0"
@@ -16,8 +16,7 @@ BoardManufacturer: "Apple Inc."
 #  "Mac-smthelse"
 BoardProduct: "Mac-551B86E5744E2388"
 BoardVersion: "MacBookPro14,3"
-# FIXME: check
-BoardRevision: 0x1B
+BoardRevision: 0x1C
 BoardAssetTag: ""
 BoardType: 0xA
 BoardLocationInChassis: ""
@@ -26,14 +25,10 @@ ChassisType: 0x9
 ChassisVersion: "Mac-551B86E5744E2388"
 ChassisAssetTag: ""
 PlatformFeature: 0x1A
-# FIXME: check
-FirmwareFeatures: 0xFD0FF536
-# FIXME: check
-FirmwareFeaturesMask: 0xFF1FFF3F
-# FIXME: check
-ExtendedFirmwareFeatures: 0x00000000FD0FF536
-# FIXME: check
-ExtendedFirmwareFeaturesMask: 0x00000000FF1FFF3F
+FirmwareFeatures: 0xFF0FF57E
+FirmwareFeaturesMask: 0xFF1FFF7F
+ExtendedFirmwareFeatures: 0x00000000FF0FF57E
+ExtendedFirmwareFeaturesMask: 0x00000000FF1FFF7F
 MemoryFormFactor: 0xD
 # FIXME: check values (most should be correct?) and add missing, if any
 ProcessorType:
@@ -52,7 +47,7 @@ SmcRevision:
   - 0x0f
   - 0x00
   - 0x00
-  - 0x01
+  - 0x04
 # FIXME: check
 SmcBranch:
   - 0x32
@@ -77,17 +72,17 @@ SmcPlatform:
 SmcEPCI: 0xF0A009
 OEMStrings: |-
   Apple ROM Version
-    BIOS ID:      MBP143.88Z.F000.B00.2004240928
+    BIOS ID:      MBP143.88Z.F000.B00.2102262340
     Model:        MBP143
-    EFI Version:  207.0.0.0.0
-    Built by:     _atsserver@xapp157
-    Date:         Fri Apr 24 09:28:01 2020
-    Revision:     207 (B&I)
+    EFI Version:  429.100.7.0.0
+    Built by:     root@bb-g9-pdb130
+    Date:         Fri Feb 26 23:40:32 2021
+    Revision:     429.100.7 (B&I)
     ROM Version:  F000_B00
     Build Type:   Official Build, RELEASE
-    Compiler:     Apple LLVM version 6.1.0 (clang-602.0.53) (based on LLVM 3.6.0svn)
-    UUID:         A54E8387-9400-3D98-BCE5-D6B83515BEF4
-    UUID:         A739744D-8E70-3F7A-9B8D-98F6532FF7E5
+    Compiler:     clang-1205.0.19.59.6
+    UUID:         0FCE8F0D-03D5-3900-8D31-38D823C838E7
+    UUID:         A28F7B01-660D-3D80-985E-C221D9E4C5D9
 Specifications:
   CPUCodename:
     - "Kaby Lake"

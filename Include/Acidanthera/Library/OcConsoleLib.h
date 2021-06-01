@@ -16,12 +16,15 @@
 #define OC_CONSOLE_LIB_H
 
 #include <Protocol/ConsoleControl.h>
+#include <Protocol/AppleFramebufferInfo.h>
+#include <Protocol/AppleEg2Info.h>
 
 /**
   Console renderer to use.
 **/
 typedef enum {
   OcConsoleRendererBuiltinGraphics,
+  OcConsoleRendererBuiltinText,
   OcConsoleRendererSystemGraphics,
   OcConsoleRendererSystemText,
   OcConsoleRendererSystemGeneric
@@ -103,14 +106,17 @@ OcParseConsoleMode (
   @param[in]  Width      Resolution width or 0 for Max.
   @param[in]  Height     Resolution height or 0 for Max.
   @param[in]  Bpp        Resolution bpp or 0 for automatic.
+  @param[in]  Force      Force the specified resolution using
+                         the OC_FORCE_RESOLUTION protocol.
 
   @retval EFI_SUCCESS on success.
 **/
 EFI_STATUS
 OcSetConsoleResolution (
-  IN  UINT32              Width,
-  IN  UINT32              Height,
-  IN  UINT32              Bpp    OPTIONAL
+  IN  UINT32              Width  OPTIONAL,
+  IN  UINT32              Height OPTIONAL,
+  IN  UINT32              Bpp    OPTIONAL,
+  IN  BOOLEAN             Force
   );
 
 /**
@@ -130,7 +136,7 @@ OcSetConsoleMode (
 /**
   Ensure installed GOP protocol on ConOut handle.
 **/
-VOID
+EFI_STATUS
 OcProvideConsoleGop (
   IN BOOLEAN  Route
   );
@@ -147,12 +153,13 @@ OcReconnectConsole (
   Use direct GOP renderer for console.
 
   @param[in] CacheType   Caching type, e.g. CacheWriteCombining or -1 to disable.
+  @param[in] Rotation    Rotation scheme in degrees (must be one of 0, 90, 180, 270).
 
   @retval EFI_SUCCESS on success.
 **/
 EFI_STATUS
 OcUseDirectGop (
-  IN INT32  CacheType
+  IN INT32   CacheType
   );
 
 /**
@@ -165,6 +172,57 @@ OcUseDirectGop (
 EFI_SYSTEM_TABLE *
 AllocateNullTextOutSystemTable (
   IN EFI_SYSTEM_TABLE  *SystemTable
+  );
+
+/**
+  Provide UGA protocol instances on top of existing GOP instances.
+
+  @retval EFI_SUCCESS on success.
+**/
+EFI_STATUS
+OcProvideUgaPassThrough (
+  VOID
+  );
+
+/**
+  Provide GOP protocol instances on top of existing UGA instances.
+
+  @param[in]  ForAll  For all instances, otherwises for AppleFramebuffer-enabled only.
+
+  @retval EFI_SUCCESS on success.
+**/
+EFI_STATUS
+OcProvideGopPassThrough (
+  IN BOOLEAN  ForAll
+  );
+
+/**
+  Install and initialise Apple Framebuffer Info protocol
+  on top of GOP protocol. For EfiBoot 10.4, which can only
+  use UGA, this is the only way to obtain framebuffer base
+  for XNU kernel PE Boot_args.
+
+  @param[in] Reinstall  Overwrite installed protocol.
+
+  @retval installed or located protocol or NULL.
+**/
+APPLE_FRAMEBUFFER_INFO_PROTOCOL *
+OcAppleFbInfoInstallProtocol (
+  IN BOOLEAN  Reinstall
+  );
+
+/**
+  Install and initialise Apple EG2 Info protocol
+  on top of GOP protocol. For newer EfiBoot this is the way
+  to obtain screen rotation angle.
+
+  @param[in] Reinstall  Overwrite installed protocol.
+
+  @retval installed or located protocol or NULL.
+**/
+APPLE_EG2_INFO_PROTOCOL *
+OcAppleEg2InfoInstallProtocol (
+  IN BOOLEAN  Reinstall
   );
 
 #endif // OC_CONSOLE_LIB_H

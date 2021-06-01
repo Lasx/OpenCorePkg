@@ -15,6 +15,21 @@
 #ifndef OC_MAC_INFO_LIB_H
 #define OC_MAC_INFO_LIB_H
 
+//
+// Maximum characters for valid Mac-like product name.
+//
+#define OC_OEM_NAME_MAX 48
+
+//
+// Maximum characters for valid Mac-like serial name.
+//
+#define OC_OEM_SERIAL_MAX 24
+
+//
+// Maximum characters for ROM address.
+//
+#define OC_OEM_ROM_MAX 6
+
 typedef struct MAC_INFO_DATA_SMBIOS_ {
   //
   // Type 0
@@ -71,6 +86,13 @@ typedef struct MAC_INFO_DATA_DATAHUB_ {
   CONST UINT8   *SmcPlatform;
 } MAC_INFO_DATA_DATAHUB;
 
+typedef struct MAC_INFO_DATA_OEM_ {
+  CHAR8         SystemSerialNumber[OC_OEM_SERIAL_MAX];
+  CHAR8         Mlb[OC_OEM_SERIAL_MAX];
+  UINT8         Rom[OC_OEM_ROM_MAX];
+  EFI_GUID      SystemUuid;
+} MAC_INFO_DATA_OEM;
+
 typedef struct MAC_INFO_DATA_ {
   //
   // DataHub data.
@@ -80,6 +102,10 @@ typedef struct MAC_INFO_DATA_ {
   // SMBIOS data.
   //
   MAC_INFO_DATA_SMBIOS  Smbios;
+  //
+  // Serial data.
+  //
+  MAC_INFO_DATA_OEM     Oem;
 } MAC_INFO_DATA;
 
 /**
@@ -91,8 +117,35 @@ typedef struct MAC_INFO_DATA_ {
 **/
 VOID
 GetMacInfo (
-  IN CONST CHAR8     *ProductName,
+  IN  CONST CHAR8    *ProductName,
   OUT MAC_INFO_DATA  *MacInfo
+  );
+
+/**
+  Determine if specified product name is a real Mac model.
+
+  @param[in] ProductName   Product to check information for.
+
+  @retval TRUE if ProductName is a real Mac model.
+**/
+BOOLEAN
+HasMacInfo (
+  IN CONST CHAR8     *ProductName
+  );
+
+/**
+  Determine if specified model and kernel version can
+  run in 64-bit kernel mode.
+
+  @param[in] ProductName        Product to get information for.
+  @param[in] KernelVersion      Kernel version.
+
+  @retval TRUE if supported.
+**/
+BOOLEAN
+IsMacModel64BitCompatible (
+  IN CONST CHAR8    *ProductName,
+  IN UINT32         KernelVersion
   );
 
 #endif // OC_MAC_INFO_LIB_H

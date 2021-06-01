@@ -101,14 +101,14 @@
 
        \rmfamily
 
-       Copyright \textcopyright 2020 vit9696
+       Copyright \textcopyright 2020-2021 vit9696
 
    \end{center}
 \end{titlepage}
 
 \section{Introduction}\label{introduction}
 
-This document provides information on select issues discovered in the relesed
+This document provides information on select issues discovered in the released
 versions of \href{https://github.com/acidanthera/OpenCorePkg}{OpenCore}
 and provides workarounds whenever possible. This document is updated
 after OpenCore is released and is thus not contained in the binary packages.
@@ -130,7 +130,8 @@ can be found at \href{https://github.com/acidanthera/bugtracker}{Acidanthera Bug
 
   Boot picker menu may not show when upgrading macOS with the following error:
 
-\texttt{OCUI﻿: Ent﻿ry kind 16 unsupported for Icon﻿OCB: ShowMenu failed - Unsupported﻿﻿}\\
+\texttt{OCUI﻿: Ent﻿ry kind 16 unsupported for Icon﻿}\\
+\texttt{OCB: ShowMenu failed - Unsupported﻿﻿}\\
 \texttt{Halting on critical error﻿}
 
   \textbf{Possible workarounds}:
@@ -181,6 +182,139 @@ can be found at \href{https://github.com/acidanthera/bugtracker}{Acidanthera Bug
     \item Avoid using DEBUG builds \texttt{OR}
     \item Update to master version
   \end{itemize}
+
+
+\item
+  \textbf{Identifier}: \texttt{ERR059-4} \\
+  \textbf{Published}: 2020-06-24 21:18 MSK \\
+  \textbf{Updated}: 2020-07-05 23:20 MSK \\
+  \textbf{Affected versions}: 0.5.9 \\
+  \textbf{Resolved in}: 0.6.0 (\href{https://github.com/acidanthera/OpenCorePkg/commit/d8ace476067ebb4b5abe17e4cdcd094fa3641689}{d8ace476}) \\
+  \textbf{Description}:
+
+  Driver injection into \texttt{kernel collections} normally used in macOS 11,
+  and required for macOS 11 installer, is unsupported.
+
+  \textbf{Possible workarounds}:
+  \begin{itemize}
+    \tightlist
+    \item For \textbf{preview} version of KernelCollection injection code please update
+    to commit \texttt{d8ace476} and make sure that variables forcing legacy
+    kernel loading (\texttt{booter-fileset-kernel} and \texttt{booter-fileset-basesystem})
+    are deleted from NVRAM.
+    \item For \textbf{preinstalled} versions of macOS 11 add NVRAM variable \\
+    \texttt{7C436110-AB2A-4BBB-A880-FE41995C9F82:booter-fileset-kernel}
+    with \texttt{00} value; for some EfiBoot variants it may also be
+    required to set \texttt{booter-fileset-basesystem} variable with \texttt{00} value.
+  \end{itemize}
+
+
+\item
+  \textbf{Identifier}: \texttt{ERR059-5} \\
+  \textbf{Published}: 2020-07-25 18:24 MSK \\
+  \textbf{Updated}: 2020-07-25 18:24 MSK \\
+  \textbf{Affected versions}: 0.0.3-0.5.9 \\
+  \textbf{Resolved in}: 0.6.0 (\href{https://github.com/acidanthera/OpenCorePkg/commit/426a5dbe09365d3fe1d18dbde9868fe12900c30c}{426a5dbe}) \\
+  \textbf{Description}:
+
+  \texttt{OSXSAVE} CPUID feature may not be reported to macOS release kernels when emulating the CPUID
+  causing crashes of select programs relying on \texttt{Hypervisor.framework} like Docker. Reference:
+  \href{https://github.com/acidanthera/bugtracker/issues/1035}{acidanthera/bugtracker\#1035}.
+
+  \textbf{Possible workarounds}:
+  \begin{itemize}
+    \tightlist
+    \item Manually enable the \texttt{OSXSAVE} bit in \texttt{ECX} register \texttt{OR}
+    \item Update to master version
+  \end{itemize}
+
+\item
+  \textbf{Identifier}: \texttt{ERR060-1} \\
+  \textbf{Published}: 2020-08-22 03:10 MSK \\
+  \textbf{Updated}: 2020-08-22 03:10 MSK \\
+  \textbf{Affected versions}: 0.0.1-0.6.0 \\
+  \textbf{Resolved in}: 0.6.1 (\href{https://github.com/acidanthera/OpenCorePkg/commit/89be8ea5bb98dc8c9eb49a5e29c5343643535ae4}{89be8ea5}) \\
+  \textbf{Description}:
+
+  APFS-formatted macOS Recovery (e.g. Big Sur Recovery) will not load with a boot failure error. Reference:
+  \href{https://github.com/acidanthera/bugtracker/issues/1078}{acidanthera/bugtracker\#1078}.
+
+  \textbf{Possible workarounds}:
+  \begin{itemize}
+    \tightlist
+
+    \item Enable \texttt{JumpstartHotPlug} \texttt{OR}
+    \item Update to master version
+  \end{itemize}
+
+\item
+  \textbf{Identifier}: \texttt{ERR061-1} \\
+  \textbf{Published}: 2020-09-11 14:55 MSK \\
+  \textbf{Updated}: 2020-09-11 14:55 MSK \\
+  \textbf{Affected versions}: 0.5.3-0.6.1 \\
+  \textbf{Resolved in}: 0.6.2 (\href{https://github.com/acidanthera/OpenCorePkg/commit/d3cf117c8661a4eda1863ca1fcdfae5c277974db}{d3cf117c}) \\
+  \textbf{Description}:
+
+  APFS-formatted drives previously made available with \texttt{ApfsImageLoader.efi}
+  driver are no longer visible with OpenCore builtin \texttt{EnableJumpstart} APFS
+  functionality on platforms that need \texttt{UnblockFsConnect} quirk. Reference:
+  \href{https://github.com/acidanthera/bugtracker/issues/1128}{acidanthera/bugtracker\#1128}.
+
+  \textbf{Possible workarounds}:
+  \begin{itemize}
+    \tightlist
+
+    \item Update to master version \texttt{OR}
+    \item Disable \texttt{ConnectDrivers} and enable \texttt{GlobalConnect} (may cause
+      performance and compatibility issues depending on the driver use)
+
+  \end{itemize}
+
+\item
+  \textbf{Identifier}: \texttt{ERR062-1} \\
+  \textbf{Published}: 2020-10-25 01:22 MSK \\
+  \textbf{Updated}: 2020-11-01 13:28 MSK \\
+  \textbf{Affected versions}: 0.6.1-0.6.2 \\
+  \textbf{Resolved in}: 0.6.3 (\href{https://github.com/acidanthera/OpenCorePkg/commit/1b0041493d4693f9505aa6415d93079ea59f7ab0}{1b004149}) \\
+  \textbf{Description}:
+
+  Booting Big Sur beta 10 or newer will cause a kernel panic in \texttt{apfs.kext} with the
+  \texttt{Rooting from the live fs of a sealed volume is not allowed on a RELEASE build}
+  message. Reference:
+  \href{https://github.com/acidanthera/bugtracker/issues/1235}{acidanthera/bugtracker\#1235}.
+
+  \textbf{Possible workarounds}:
+  \begin{itemize}
+    \tightlist
+
+    \item Update to master version \texttt{OR}
+    \item Set \texttt{SecureBootModel} to \texttt{Disabled}
+
+  \end{itemize}
+
+  \emph{Note}: On virtual machines \texttt{ForceSecureBootScheme} will also need
+  to be enabled if \texttt{SecureBootModel} is different from \texttt{x86legacy}
+  or \texttt{Disabled}.
+
+\item
+  \textbf{Identifier}: \texttt{ERR067-1} \\
+  \textbf{Published}: 2021-02-20 10:42 MSK \\
+  \textbf{Updated}: 2021-02-20 10:42 MSK \\
+  \textbf{Affected versions}: 0.6.6 \\
+  \textbf{Resolved in}: 0.6.7 (\href{https://github.com/acidanthera/OpenCorePkg/commit/b4449f48dd01703b5766352b6f29717415aff08b}{b4449f48}) \\
+  \textbf{Description}:
+
+  Loading OpenCore via bootstrap may fail on certain Mac firmwares. Reference:
+  \href{https://github.com/acidanthera/bugtracker/issues/1502}{acidanthera/bugtracker\#1502}.
+
+  \textbf{Possible workarounds}:
+  \begin{itemize}
+    \tightlist
+
+    \item Update to master version
+
+  \end{itemize}
+
 \end{itemize}
 
 \end{document}

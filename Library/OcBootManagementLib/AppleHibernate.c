@@ -46,7 +46,7 @@ OcActivateHibernateWake (
   INTN                     NumPatchedNodes;
 
   if (HibernateMask == HIBERNATE_MODE_NONE) {
-    return EFI_NOT_FOUND;
+    return EFI_INVALID_PARAMETER;
   }
 
   HasHibernateInfo = FALSE;
@@ -81,14 +81,24 @@ OcActivateHibernateWake (
         BootImagePath
         );
 
-      RemainingPath   = BootImagePath;
-      NumPatchedNodes = OcFixAppleBootDevicePath (&RemainingPath);
+      //
+      // WARN: BootImagePath must be allocated from pool as it may be reallocated.
+      //
+      NumPatchedNodes = OcFixAppleBootDevicePath (
+        &BootImagePath,
+        &RemainingPath
+        );
       if (NumPatchedNodes > 0) {
         DebugPrintDevicePath (
           DEBUG_INFO,
           "OCB: boot-image post-fix",
           BootImagePath
           );
+
+        //
+        // Updated DevicePath may have different size.
+        //
+        Size = GetDevicePathSize (BootImagePath);
 
         Status = gRT->SetVariable (
                         L"boot-image",

@@ -208,13 +208,10 @@ OcLogAddEntry  (
     // Write to serial port.
     //
     if ((OcLog->Options & OC_LOG_SERIAL) != 0) {
-      Status = SerialPortWrite ((UINT8 *) Private->TimingTxt, TimingLength);
-      if (Status == EFI_NO_MAPPING) {
-        //
-        // Disable serial port option.
-        //
-        OcLog->Options &= ~OC_LOG_SERIAL;
-      }
+      //
+      // No return value check - SerialPortWrite either stalls or falsely return all bytes written if no serial available.
+      //
+      SerialPortWrite ((UINT8 *) Private->TimingTxt, TimingLength);
       SerialPortWrite ((UINT8 *) Private->LineBuffer, LineLength);
     }
 
@@ -451,6 +448,9 @@ OcConfigureLogProtocol (
         Status = LogFileSystem->OpenVolume (LogFileSystem, &LogRoot);
         if (EFI_ERROR (Status)) {
           LogRoot = NULL;
+        } else if (!IsWritableFileSystem (LogRoot)) {
+          LogRoot->Close (LogRoot);
+          LogRoot = NULL;
         }
       }
 
@@ -536,10 +536,6 @@ OcConfigureLogProtocol (
 
   if (LogRoot != NULL) {
     if (!EFI_ERROR (Status)) {
-      if ((Options & (OC_LOG_SERIAL | OC_LOG_ENABLE)) == (OC_LOG_SERIAL | OC_LOG_ENABLE)) {
-        SerialPortInitialize ();
-      }
-
       if (OC_LOG_PRIVATE_DATA_FROM_OC_LOG_THIS (OcLog)->AsciiBufferSize > 0) {
         SetFileData (
           LogRoot,

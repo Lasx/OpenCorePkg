@@ -275,20 +275,21 @@ enum {
   //
   // ARM Family
   //
-  MachCpuFamilyArm9              = 0xE73283AE,
-  MachCpuFamilyArm11             = 0x8FF620D8,
-  MachCpuFamilyArmXscale         = 0x53B005F5,
-  MachCpuFamilyArm12             = 0xBD1B0AE9,
-  MachCpuFamilyArm13             = 0x0CC90E64,
-  MachCpuFamilyArm14             = 0x96077EF1,
-  MachCpuFamilyArm15             = 0xA8511BCA,
-  MachCpuFamilyArmSwift          = 0x1E2D6381,
-  MachCpuFamilyArmCyclone        = 0x37A09642,
-  MachCpuFamilyArmTyphoon        = 0x2C91A47E,
-  MachCpuFamilyArmTwister        = 0x92FB37C8,
-  MachCpuFamilyArmHurricane      = 0x67CEEE93,
-  MachCpuFamilyArmMonsoonMistral = 0xE81E7EF6,
-  MachCpuFamilyArmVortexTempest  = 0x07D34B9F,
+  MachCpuFamilyArm9                = 0xE73283AE,
+  MachCpuFamilyArm11               = 0x8FF620D8,
+  MachCpuFamilyArmXscale           = 0x53B005F5,
+  MachCpuFamilyArm12               = 0xBD1B0AE9,
+  MachCpuFamilyArm13               = 0x0CC90E64,
+  MachCpuFamilyArm14               = 0x96077EF1,
+  MachCpuFamilyArm15               = 0xA8511BCA,
+  MachCpuFamilyArmSwift            = 0x1E2D6381,
+  MachCpuFamilyArmCyclone          = 0x37A09642,
+  MachCpuFamilyArmTyphoon          = 0x2C91A47E,
+  MachCpuFamilyArmTwister          = 0x92FB37C8,
+  MachCpuFamilyArmHurricane        = 0x67CEEE93,
+  MachCpuFamilyArmMonsoonMistral   = 0xE81E7EF6,
+  MachCpuFamilyArmVortexTempest    = 0x07D34B9F,
+  MachCpuFamilyArmLightningThunder = 0x462504D2,
 };
 
 typedef UINT32 MACH_CPU_FAMILY;
@@ -858,8 +859,8 @@ typedef struct {
   UINT32 Size;                     ///< size in bytes of this section
   UINT32 Offset;                   ///< file offset of this section
   UINT32 Alignment;                ///< section alignment (power of 2)
-  UINT32 RelocationEntriesOffset;  ///< file offset of relocation entries
-  UINT32 NumRelocationEntries;     ///< number of relocation entries
+  UINT32 RelocationsOffset;        ///< file offset of relocation entries
+  UINT32 NumRelocations;           ///< number of relocation entries
   UINT32 Flags;                    ///< flags (section type and attributes)
   UINT32 Reserved1;                ///< reserved (for offset or index)
   UINT32 Reserved2;                ///< reserved (for count or sizeof)
@@ -882,6 +883,11 @@ typedef struct {
   UINT32 Reserved2;          ///< reserved (for count or sizeof)
   UINT32 Reserved3;          ///< reserved
 } MACH_SECTION_64;
+
+typedef union {
+  MACH_SECTION    Section32;
+  MACH_SECTION_64 Section64;
+} MACH_SECTION_ANY;
 
 #define NEXT_MACH_SEGMENT(Segment) \
   (MACH_SEGMENT_COMMAND *)((UINTN)(Segment) + (Segment)->Command.Size)
@@ -938,6 +944,11 @@ typedef struct {
   MACH_SEGMENT_FLAGS Flags;              ///< flags
   MACH_SECTION_64    Sections[];
 } MACH_SEGMENT_COMMAND_64;
+
+typedef union {
+  MACH_SEGMENT_COMMAND    Segment32;
+  MACH_SEGMENT_COMMAND_64 Segment64;
+} MACH_SEGMENT_COMMAND_ANY;
 
 ///
 /// A fixed virtual shared library (filetype == MH_FVMLIB in the mach header)
@@ -1780,6 +1791,95 @@ typedef struct {
 } MACH_FIXED_VM_FILE_COMMAND;
 
 ///
+/// LC_FILESET_ENTRY commands describe constituent Mach-O files that are part
+/// of a fileset. In one implementation, entries are dylibs with individual
+/// mach headers and repositionable text and data segments. Each entry is
+/// further described by its own mach header.
+///
+typedef struct {
+  MACH_LOAD_COMMAND_HDR_
+  UINT64                    VirtualAddress;  ///< memory address of the entry
+  UINT64                    FileOffset;      ///< file offset of the entry
+  MACH_LOAD_COMMAND_STRING  EntryId;         ///< contained entry id
+  UINT32                    Reserved;        ///< reserved
+  CHAR8                     Payload[];       ///< file information starting at entry id
+} MACH_FILESET_ENTRY_COMMAND;
+
+///
+/// DYLD_CHAINED_PTR_64_KERNEL_CACHE, DYLD_CHAINED_PTR_X86_64_KERNEL_CACHE
+///
+typedef struct {
+  UINT64 Target     : 30,  ///< basePointers[cacheLevel] + target
+         CacheLevel :  2,  ///< what level of cache to bind to (indexes a mach_header array)
+         Diversity  : 16,
+         AddrDiv    :  1,
+         Key        :  2,
+         Next       : 12,  ///< 1 or 4-byte stide
+         IsAuth     :  1;  ///< 0 -> not authenticated.  1 -> authenticated
+} MACH_DYLD_CHAINED_PTR_64_KERNEL_CACHE_REBASE;
+
+// header of the LC_DYLD_CHAINED_FIXUPS payload
+typedef struct {
+  UINT32 FixupsVersion;  ///< 0
+  UINT32 StartsOffset;   ///< offset of dyld_chained_starts_in_image in chain_data
+  UINT32 ImportsOffset;  ///< offset of imports table in chain_data
+  UINT32 SymbolsOffset;  ///< offset of symbol strings in chain_data
+  UINT32 ImportsCount;   ///< number of imported symbol names
+  UINT32 ImportsFormat;  ///< DYLD_CHAINED_IMPORT*
+  UINT32 SymbolsFormat;  ///< 0 => uncompressed, 1 => zlib compressed
+} MACHO_DYLD_CHAINED_FIXUPS_HEADER;
+
+///
+/// This struct is embedded in LC_DYLD_CHAINED_FIXUPS payload
+///
+typedef struct {
+  UINT32 NumSegments;
+  UINT32 SegInfoOffset[];  ///< each entry is offset into this struct for that
+                           ///< segment followed by pool of
+                           ///< dyld_chain_starts_in_segment data
+} MACH_DYLD_CHAINED_STARTS_IN_IMAGE;
+
+typedef struct {
+  UINT32 Size;             ///< size of this (amount kernel needs to copy)
+  UINT16 PageSize;         ///< 0x1000 or 0x4000
+  UINT16 PointerFormat;    ///< DYLD_CHAINED_PTR_*
+  UINT64 SegmentOffset;    ///< offset in memory to start of segment
+  UINT32 MaxValidPointer;  ///< for 32-bit OS, any value beyond this is not a pointer
+  UINT16 PageCount;        ///< how many pages are in array
+  UINT16 PageStart[];      ///< each entry is offset in each page of first element in chain
+                           ///< or DYLD_CHAINED_PTR_START_NONE if no fixups on page
+//UINT16 ChainStarts[];    ///< some 32-bit formats may require multiple starts per page.
+                           ///< for those, if high bit is set in page_starts[], then it
+                           ///< is index into chain_starts[] which is a list of starts
+                           ///< the last of which has the high bit set
+} MACH_DYLD_CHAINED_STARTS_IN_SEGMENT;
+
+///
+/// Values for MACH_DYLD_CHAINED_STARTS_IN_SEGMENT.PointerFormat.
+///
+enum {
+  MACH_DYLD_CHAINED_PTR_ARM64E              =  1,  ///< stride 8, unauth target is vmaddr
+  MACH_DYLD_CHAINED_PTR_64                  =  2,  ///< target is vmaddr
+  MACH_DYLD_CHAINED_PTR_32                  =  3,
+  MACH_DYLD_CHAINED_PTR_32_CACHE            =  4,
+  MACH_DYLD_CHAINED_PTR_32_FIRMWARE         =  5,
+  MACH_DYLD_CHAINED_PTR_64_OFFSET           =  6,  ///< target is vm offset
+  MACH_DYLD_CHAINED_PTR_ARM64E_OFFSET       =  7,  ///< old name
+  MACH_DYLD_CHAINED_PTR_ARM64E_KERNEL       =  7,  ///< stride 4, unauth target is vm offset
+  MACH_DYLD_CHAINED_PTR_64_KERNEL_CACHE     =  8,
+  MACH_DYLD_CHAINED_PTR_ARM64E_USERLAND     =  9,  ///< stride 8, unauth target is vm offset
+  MACH_DYLD_CHAINED_PTR_ARM64E_FIRMWARE     = 10,  ///< stride 4, unauth target is vmaddr
+  MACH_DYLD_CHAINED_PTR_X86_64_KERNEL_CACHE = 11,  ///< stride 1, x86_64 kernel caches
+  MACH_DYLD_CHAINED_PTR_ARM64E_USERLAND24   = 12   ///< stride 8, unauth target is vm offset, 24-bit bind
+};
+
+enum {
+  MACH_DYLD_CHAINED_PTR_START_NONE  = 0xFFFF,  ///< used in page_start[] to denote a page with no fixups
+  MACH_DYLD_CHAINED_PTR_START_MULTI = 0x8000,  ///< used in page_start[] to denote a page which has multiple starts
+  MACH_DYLD_CHAINED_PTR_START_LAST  = 0x8000,  ///< used in chain_starts[] to denote last start in list for page
+};
+
+///
 /// The entry_point_command is a replacement for thread_command.
 /// It is used for main executables to specify the location (file offset)
 /// of main().  If -stack_size was used at link time, the stacksize
@@ -1813,37 +1913,40 @@ typedef struct {
 } MACH_SOURCE_VERSION_COMMAND;
 
 typedef union {
-  CONST MACH_LOAD_COMMAND               *Hdr;
-  CONST MACH_SEGMENT_COMMAND            *Segment;
-  CONST MACH_SEGMENT_COMMAND_64         *Segment64;
-  CONST MACH_FIXED_VM_LIB_COMMAND       *VmLib;
-  CONST MACH_DYLIB_COMMAND              *Dylib;
-  CONST MACH_SUB_FRAMEWORK_COMMAND      *SubFramework;
-  CONST MACH_SUB_CLIENT_COMMAND         *SubClient;
-  CONST MACH_SUB_UMBRELLA_COMMAND       *SubUmbrella;
-  CONST MACH_SUB_LIBRARY_COMMAND        *SubLibrary;
-  CONST MACH_PREBOUND_DYLIB_COMMAND     *PreboundDyLib;
-  CONST MACH_DYLINKER_COMMAND           *Dylinker;
-  CONST MACH_THREAD_COMMAND             *Thread;
-  CONST MACH_ROUTINES_COMMAND           *Routines;
-  CONST MACH_ROUTINES_COMMAND_64        *Routines64;
-  CONST MACH_SYMTAB_COMMAND             *Symtab;
-  CONST MACH_DYSYMTAB_COMMAND           *Dysymtab;
-  CONST MACH_TWO_LEVEL_HINTS_COMMAND    *TwoLevelHints;
-  CONST MACH_PREBIND_CHECKSUM_COMMAND   *PrebindChecksum;
-  CONST MACH_UUID_COMMAND               *Uuid;
-  CONST MACH_RUN_PATH_COMMAND           *RunPath;
-  CONST MACH_LINKEDIT_DATA_COMMAND      *LinkeditData;
-  CONST MACH_ENCRYPTION_INFO_COMMAND    *EncryptionInfo;
-  CONST MACH_ENCRYPTION_INFO_COMMAND_64 *EncryptionInfo64;
-  CONST MACH_VERSION_MIN_COMMAND        *VersionMin;
-  CONST MACH_BUILD_VERSION_COMMAND      *BuildVersion;
-  CONST MACH_DYLD_INFO_COMMAND          *DyldInfo;
-  CONST MACH_LINKER_OPTION_COMMAND      *LinkerOption;
-  CONST MACH_SYMBOL_SEGMENT_COMMAND     *SymbolSegment;
-  CONST MACH_IDENTIFICATION_COMMAND     *Identification;
-  CONST MACH_FIXED_VM_FILE_COMMAND      *FixedVmFile;
-  CONST VOID                            *Pointer;
+  MACH_LOAD_COMMAND                     *Hdr;
+  MACH_SEGMENT_COMMAND                  *Segment;
+  MACH_SEGMENT_COMMAND_64               *Segment64;
+  MACH_FIXED_VM_LIB_COMMAND             *VmLib;
+  MACH_DYLIB_COMMAND                    *Dylib;
+  MACH_SUB_FRAMEWORK_COMMAND            *SubFramework;
+  MACH_SUB_CLIENT_COMMAND               *SubClient;
+  MACH_SUB_UMBRELLA_COMMAND             *SubUmbrella;
+  MACH_SUB_LIBRARY_COMMAND              *SubLibrary;
+  MACH_PREBOUND_DYLIB_COMMAND           *PreboundDyLib;
+  MACH_DYLINKER_COMMAND                 *Dylinker;
+  MACH_THREAD_COMMAND                   *Thread;
+  MACH_ROUTINES_COMMAND                 *Routines;
+  MACH_ROUTINES_COMMAND_64              *Routines64;
+  MACH_SYMTAB_COMMAND                   *Symtab;
+  MACH_DYSYMTAB_COMMAND                 *Dysymtab;
+  MACH_TWO_LEVEL_HINTS_COMMAND          *TwoLevelHints;
+  MACH_PREBIND_CHECKSUM_COMMAND         *PrebindChecksum;
+  MACH_UUID_COMMAND                     *Uuid;
+  MACH_RUN_PATH_COMMAND                 *RunPath;
+  MACH_LINKEDIT_DATA_COMMAND            *LinkeditData;
+  MACH_ENCRYPTION_INFO_COMMAND          *EncryptionInfo;
+  MACH_ENCRYPTION_INFO_COMMAND_64       *EncryptionInfo64;
+  MACH_VERSION_MIN_COMMAND              *VersionMin;
+  MACH_BUILD_VERSION_COMMAND            *BuildVersion;
+  MACH_DYLD_INFO_COMMAND                *DyldInfo;
+  MACH_LINKER_OPTION_COMMAND            *LinkerOption;
+  MACH_SYMBOL_SEGMENT_COMMAND           *SymbolSegment;
+  MACH_IDENTIFICATION_COMMAND           *Identification;
+  MACH_FIXED_VM_FILE_COMMAND            *FixedVmFile;
+  MACH_LINKEDIT_DATA_COMMAND            *DyldExportsTrie;
+  MACH_LINKEDIT_DATA_COMMAND            *DyldChainedFixups;
+  MACH_FILESET_ENTRY_COMMAND            *FilesetEntry;
+  VOID                                  *Pointer;
   UINTN                                 Address;
 } MACH_LOAD_COMMAND_PTR;
 
@@ -1924,6 +2027,7 @@ typedef UINT32 MACH_HEADER_FILE_TYPE;
 #define MACH_HEADER_FLAG_APP_EXTENSION_SAFE               BIT25
 #define MACH_HEADER_FLAG_NLIST_OUTOFSYNC_WITH_DYLDINFO    BIT26
 #define MACH_HEADER_FLAG_SIM_SUPPORT                      BIT27
+#define MACH_HEADER_FLAG_DYLIB_IN_CACHE                   BIT31
 
 typedef UINT32 MACH_HEADER_FLAGS;
 
@@ -2016,6 +2120,11 @@ typedef struct {
   UINT64 Value;        ///< value of this symbol (or stab offset)
 } MACH_NLIST_64;
 
+typedef union {
+  MACH_NLIST    Symbol32;
+  MACH_NLIST_64 Symbol64;
+} MACH_NLIST_ANY;
+
 //
 // Symbols with a index into the string table of zero (n_un.n_strx == 0) are
 // defined to have a null, "", name.  Therefore all string indexes to non null
@@ -2069,9 +2178,9 @@ typedef struct {
 // sections in different files.
 //
 // The n_value field for all symbol table entries (including N_STAB's) gets
-// updated by the link editor based on the value of it's n_sect field and where
+// updated by the link editor based on the value of its n_sect field and where
 // the section n_sect references gets relocated.  If the value of the n_sect
-// field is NO_SECT then it's n_value field is not changed by the link editor.
+// field is NO_SECT then its n_value field is not changed by the link editor.
 //
 #define NO_SECT     0  ///< symbol is not in any section
 #define MAX_SECT  255  ///< 1 thru 255 inclusive
@@ -2158,7 +2267,7 @@ typedef struct {
 #define MACH_N_REF_TO_WEAK  0x0080U
 ///
 /// The N_ARM_THUMB_DEF bit of the n_desc field indicates that the symbol is
-/// a defintion of a Thumb function.
+/// a definition of a Thumb function.
 ///
 #define MACH_N_ARM_THUMB_DEF  0x0008U
 ///
@@ -2205,7 +2314,7 @@ typedef struct {
 #define MACH_RELOC_ABSOLUTE  0U    ///< absolute relocation type for Mach-O files
 
 //
-// The r_address is not really the address as it's name indicates but an
+// The r_address is not really the address as its name indicates but an
 // offset.  In 4.3BSD a.out objects this offset is from the start of the
 // "segment" for which relocation entry is for (text or data).  For Mach-O
 // object files it is also an offset but from the start of the "section" for

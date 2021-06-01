@@ -1,7 +1,7 @@
 BIOSVendor: "Apple Inc."
-BIOSVersion: "1037.120.87.0.0"
-BIOSLegacyVersion: "MP71.88Z.F000.B00.2005131954"
-BIOSReleaseDate: "05/13/2020"
+BIOSVersion: "1554.100.64.0.0"
+BIOSLegacyVersion: "MP71.88Z.F000.B00.2103102018"
+BIOSReleaseDate: "03/10/2021"
 SystemManufacturer: "Apple Inc."
 SystemProductName: "MacPro7,1"
 SystemVersion: "1.0"
@@ -47,17 +47,17 @@ SmcPlatform:
   - 0x00
 OEMStrings: |-
   Apple ROM Version
-    BIOS ID:      MP71.88Z.F000.B00.2005131954
+    BIOS ID:      MP71.88Z.F000.B00.2103102018
     Model:        MP71
-    EFI Version:  1037.120.87.0.0
-    Built by:     _securitya@nonijuice
-    Date:         Wed May 13 19:54:44 2020
-    Revision:     1037.120.87 (B&I)
+    EFI Version:  1554.100.64.0.0
+    Built by:     root@bb-g8-pdb62
+    Date:         Wed Mar 10 20:18:45 2021
+    Revision:     1554.100.64 (B&I)
     ROM Version:  F000_B00
     Build Type:   Official Build, RELEASE
-    Compiler:     clang-1103.2.29.8
-    UUID:         AE1298CF-67F2-3343-893D-13B9A579EBD7
-    UUID:         65258576-FDEB-32EA-B2FF-5F29A91E084C
+    Compiler:     clang-1205.0.19.59.6
+    UUID:         F01990C8-DA97-3A5B-B37C-5948755DFC75
+    UUID:         84DF3978-67B0-34B3-9565-053205EF0AD9
 Specifications:
   CPUCodename:
     - "Cascade Lake"
@@ -65,6 +65,7 @@ Specifications:
     - "Intel Xeon W-3245M CPU @ 3.20 GHz"
   GPU:
     - "Radeon Pro 580X"
+    - "Radeon Pro W5500X"
     - "Radeon Pro W5700X"
     - "Radeon Pro Vega II"
     - "Radeon Pro Vega II Duo"
@@ -96,6 +97,7 @@ AppleBoardCode:
 AppleModelYear:
   - 2019
   - 2020
+  - 2021
 MinimumOSVersion: "10.15.1"
 MaximumOSVersion: null
 AppleModelId: "J160"
