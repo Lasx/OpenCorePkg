@@ -147,6 +147,7 @@ mAcpiQuirksSchema[] = {
   OC_SCHEMA_BOOLEAN_IN ("RebaseRegions",    OC_GLOBAL_CONFIG, Acpi.Quirks.RebaseRegions),
   OC_SCHEMA_BOOLEAN_IN ("ResetHwSig",       OC_GLOBAL_CONFIG, Acpi.Quirks.ResetHwSig),
   OC_SCHEMA_BOOLEAN_IN ("ResetLogoStatus",  OC_GLOBAL_CONFIG, Acpi.Quirks.ResetLogoStatus),
+  OC_SCHEMA_BOOLEAN_IN ("SyncTableIds",     OC_GLOBAL_CONFIG, Acpi.Quirks.SyncTableIds),
 };
 
 STATIC
@@ -556,7 +557,7 @@ mPlatformConfigurationDataHubSchema[] = {
 STATIC
 OC_SCHEMA
 mPlatformConfigurationGenericSchema[] = {
-  OC_SCHEMA_BOOLEAN_IN ("AdviseWindows",      OC_GLOBAL_CONFIG, PlatformInfo.Generic.AdviseWindows),
+  OC_SCHEMA_BOOLEAN_IN ("AdviseFeatures",     OC_GLOBAL_CONFIG, PlatformInfo.Generic.AdviseFeatures),
   OC_SCHEMA_STRING_IN  ("MLB",                OC_GLOBAL_CONFIG, PlatformInfo.Generic.Mlb),
   OC_SCHEMA_BOOLEAN_IN ("MaxBIOSVersion",     OC_GLOBAL_CONFIG, PlatformInfo.Generic.MaxBIOSVersion),
   OC_SCHEMA_INTEGER_IN ("ProcessorType",      OC_GLOBAL_CONFIG, PlatformInfo.Generic.ProcessorType),

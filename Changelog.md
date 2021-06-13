@@ -1,5 +1,14 @@
 OpenCore Changelog
 ==================
+#### v0.7.1
+- Added `SyncTableIds` quirk to sync modified table OEM identifiers
+- Added CPU Info (MSRs) dumping to `SysReport`
+- Updated builtin firmware versions for SMBIOS and the rest
+- Fixed `PowerTimeoutKernelPanic` on macOS 12
+- Fixed transparency click detection on OpenCanopy boot entries
+- Added PCI device info dumping to `SysReport`
+- Fixed `SetApfsTrimTimeout` on macOS 12
+
 #### v0.7.0
 - Fixed NVRAM reset on firmware with write-protected `BootOptionSupport`
 - Improved direct GOP renderer performance for certain cases
@@ -27,6 +36,8 @@ OpenCore Changelog
 - Updated OC default SIP disabled value
 - Documented SIP values which affect macOS updates
 - Added `csr-data` Apple NVRAM var to docs
+- Fixed file alignment causing codesign issues with CLANGPDB images
+- Replaced `AdviseWindows` with `AdviseFeatures` to support APFS
 
 #### v0.6.9
 - Fixed out-of-sync cursor movement rectangle when loading e.g. CrScreenshotDxe

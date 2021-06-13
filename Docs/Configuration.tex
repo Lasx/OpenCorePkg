@@ -94,7 +94,7 @@
 
        \vspace{0.2in}
 
-       Reference Manual (0.7.0)
+       Reference Manual (0.7.1)
 
        \vspace{0.2in}
 
@@ -1209,6 +1209,15 @@ patching or the padding of \texttt{NOP} to the remaining area could be considere
 
   This works around firmware that provide a \texttt{BGRT} table but
   fail to handle screen updates afterwards.
+
+\item
+  \texttt{SyncTableIds}\\
+  \textbf{Type}: \texttt{plist\ boolean}\\
+  \textbf{Failsafe}: \texttt{false}\\
+  \textbf{Description}: Sync table identifiers with the \texttt{SLIC} table.
+
+  This works around patched tables becoming incompatible with the \texttt{SLIC}
+  table causing licensing issues in older Windows operating systems.
 
 \end{enumerate}
 
@@ -2493,9 +2502,14 @@ blocking.
   \textbf{Description}: Disables \texttt{IOMapper} support in XNU (VT-d),
   which may conflict with the firmware implementation.
 
-  \emph{Note}: This option is a preferred alternative to deleting \texttt{DMAR}
+  \emph{Note 1}: This option is a preferred alternative to deleting \texttt{DMAR}
   ACPI table and disabling VT-d in firmware preferences, which does not obstruct
   VT-d support in other systems in case they need this.
+
+  \emph{Note 2}: Misconfigured IOMMU in the firmware may result in broken devices 
+  such as ethernet or Wi-Fi adapters. For instance, an ethernet adapter may cycle in link-up 
+  link-down state infinitely and a Wi-Fi adapter may fail to discover networks. 
+  Gigabyte is one of the most common OEMs with these issues.
 
 \item
   \texttt{DisableLinkeditJettison}\\
@@ -5016,10 +5030,10 @@ from \href{https://github.com/acidanthera/dmidecode/releases}{Acidanthera/dmidec
   valid values otherwise, which could obstruct the operation of some software.
 
 \item
-  \texttt{AdviseWindows}\\
+  \texttt{AdviseFeatures}\\
   \textbf{Type}: \texttt{plist\ boolean}\\
   \textbf{Failsafe}: \texttt{false}\\
-  \textbf{Description}: Forces Windows support in \texttt{FirmwareFeatures}.
+  \textbf{Description}: Updates \texttt{FirmwareFeatures} with supported bits.
 
   Added bits to \texttt{FirmwareFeatures}:
 
@@ -5030,7 +5044,12 @@ from \href{https://github.com/acidanthera/dmidecode/releases}{Acidanthera/dmidec
     \item \texttt{FW\_FEATURE\_SUPPORTS\_UEFI\_WINDOWS\_BOOT} (\texttt{0x20000000})
     - Without this bit, it is not possible to reboot to Windows installed on
       a drive with an EFI partition that is the first partition on the disk.
+    \item \texttt{FW\_FEATURE\_SUPPORTS\_APFS} (\texttt{0x00080000})
+    - Without this bit, it is not possible to install macOS on an APFS disk.
   \end{itemize}
+
+  \emph{Note}: On most newer firmwares these bits are already set, the option
+  may be necessary when "upgrading" the firmware with new features.
 
 \item
   \texttt{MaxBIOSVersion}\\
@@ -6266,7 +6285,7 @@ functioning. Feature highlights:
   \textbf{Description}: Load APFS drivers for newly connected devices.
 
   Permits APFS USB hot plug which enables loading APFS drivers, both at OpenCore
-  startup and during OpenCore picker dusplay. Disable if not required.
+  startup and during OpenCore picker display. Disable if not required.
 
 \item
   \texttt{MinDate}\\
